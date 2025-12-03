@@ -1,10 +1,66 @@
 const audioCtx = new (window.AudioContext || window.webkitAudioContext) () ;
-const audioElement = document.querySelector('audio');
-const track = audioCtx.createMediaElementSource(audioElement);
 const analyser = audioCtx.createAnalyser();
 
-track.connect(analyser);
-analyser.connect(audioCtx.destination);
+const fileInput = document.getElementById('file-input');
+const audioElement = document.getElementById('audio');
+
+let fileSource = null;
+let currentSource = null;
+
+fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    audioElement.src = url;
+    audioElement.load();
+
+    if (!fileSource) {
+        fileSource = audioCtx.createMediaElementSource(audioElement);
+    }
+
+    if (currentSource && currentSource !== fileSource) {
+        try {
+            currentSource.disconnect();
+        } catch (e) {}
+    }
+    
+    fileSource.connect(analyser);
+    analyser.connect(audioCtx.destination);
+    currentSource = fileSource;
+    
+    
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    audioElement.play();
+});
+
+const micButton = document.getElementById('use-mic');
+micButton.addEventListener('click', useMic);
+
+let micSource = null;
+async function useMic() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+        micSource = audioCtx.createMediaStreamSource(stream);
+
+        if (currentSource && currentSource !== micSource) {
+            currentSource.disconnect();
+        }
+
+        micSource.connect(analyser);
+        currentSource = micSource;
+
+        if (audioCtx.state === "suspended") {
+            await audioCtx.resume();
+        }
+
+        console.log("Mic input ACTIVE");
+    } catch (err) {
+        console.error("Microphone access denied:", err);
+    }
+}
 
 analyser.fftSize = 2048;
 const bufferLength = analyser.frequencyBinCount;
