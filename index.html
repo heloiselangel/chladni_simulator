@@ -9,8 +9,20 @@
   <button id="use-mic">Use microphone</button>
   <input type="file" id="file-input" accept="audio/*">
   <audio id="audio" controls></audio>
-  <canvas></canvas>
+  <canvas id="canvas"></canvas>
 
   <script src="wave.js"></script>
+  <script>
+    init({
+      fileInputId: "file-input",
+      audioElementId: "audio",
+      micButtonId: "use-mic",
+      canvasId: "canvas",
+      width: 800,
+      height:800,
+      particleDensityMultiplier: 0.7
+});
+</script>
+
 </body>
 </html>
